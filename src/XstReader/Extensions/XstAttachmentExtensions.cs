@@ -47,7 +47,7 @@ namespace XstReader.App
             if (attachment == null)
                 return null;
 
-            var tempFileName = Path.GetTempFileName().Replace(".","") + Path.GetExtension(attachment.FileName);
+            var tempFileName = Path.GetTempFileName() + Path.GetExtension(attachment.FileName);
             attachment?.SaveToFile(tempFileName);
 
             return tempFileName;

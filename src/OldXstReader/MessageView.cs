@@ -56,9 +56,9 @@ namespace XstReader
         public bool HasFileAttachment => Message.Attachments.Files().Any();
         public bool HasVisibleFileAttachment => Message.Attachments.VisibleFiles().Any();
         public bool HasEmailAttachment => Attachments.Any(a => a.IsEmail);
-        public bool ShowText => Message.Body.Format == XstMessageBodyFormat.PlainText;
-        public bool ShowHtml => Message.Body.Format == XstMessageBodyFormat.Html;
-        public bool ShowRtf => Message.Body.Format == XstMessageBodyFormat.Rtf;
+        public bool ShowText => Message.Body?.Format == XstMessageBodyFormat.PlainText;
+        public bool ShowHtml => Message.Body?.Format == XstMessageBodyFormat.Html;
+        public bool ShowRtf => Message.Body?.Format == XstMessageBodyFormat.Rtf;
 
         public bool HasToDisplayList => Message.Recipients.To.Any();
         public string ToDisplayList => XstFormatter.Format(Message.Recipients.To);
