@@ -1,4 +1,5 @@
 ﻿using XstReader.Exporter;
+using System.ComponentModel;
 
 namespace XstReader.App
 {
@@ -7,6 +8,7 @@ namespace XstReader.App
         internal static bool IsFirstTime { get; private set; } = true;
 
         private ExportOptions? _Options = null;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ExportOptions Options
         {
             get => _Options ??= new ExportOptions();

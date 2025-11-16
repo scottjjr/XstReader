@@ -33,6 +33,8 @@
             this.KryptonMessagePanel = new Krypton.Toolkit.KryptonPanel();
             this.MainMenuSrip = new System.Windows.Forms.MenuStrip();
             this.FileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.LoadedFilesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+
             this.OpenToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.CloseFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.FileToolStripSeparator = new System.Windows.Forms.ToolStripSeparator();
@@ -98,6 +100,7 @@
             // 
             this.FileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.OpenToolStripMenuItem,
+            this.LoadedFilesToolStripMenuItem,
             this.CloseFileToolStripMenuItem,
             this.FileToolStripSeparator,
             this.FileExportFoldersToolStripMenuItem,
@@ -106,12 +109,17 @@
             this.FileToolStripMenuItem.Name = "FileToolStripMenuItem";
             this.FileToolStripMenuItem.Size = new System.Drawing.Size(57, 24);
             this.FileToolStripMenuItem.Text = "File";
+            LoadedFilesToolStripMenuItem.Image = global::XstReader.App.Properties.Resources.folder_multiple_outline; 
+            LoadedFilesToolStripMenuItem.Name = "LoadedFilesToolStripMenuItem"; 
+            LoadedFilesToolStripMenuItem.Size = new System.Drawing.Size(123, 24); 
+            LoadedFilesToolStripMenuItem.Text = "Loaded Files"; 
+            LoadedFilesToolStripMenuItem.Enabled = false;
             // 
             // OpenToolStripMenuItem
             // 
             this.OpenToolStripMenuItem.Name = "OpenToolStripMenuItem";
             this.OpenToolStripMenuItem.Size = new System.Drawing.Size(250, 26);
-            this.OpenToolStripMenuItem.Text = "Open .ost or .pst file";
+            this.OpenToolStripMenuItem.Text = "Open .ost or .pst file(s)";
             // 
             // CloseFileToolStripMenuItem
             // 
@@ -267,6 +275,8 @@
         private MenuStrip MainMenuSrip;
         private ToolStripMenuItem FileToolStripMenuItem;
         private ToolStripMenuItem OpenToolStripMenuItem;
+        private ToolStripMenuItem LoadedFilesToolStripMenuItem;
+
         private ToolStripMenuItem CloseFileToolStripMenuItem;
         private ToolStripMenuItem MessageToolStripMenuItem;
         private OpenFileDialog OpenXstFileDialog;

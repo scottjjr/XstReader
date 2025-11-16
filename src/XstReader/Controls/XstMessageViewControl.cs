@@ -16,8 +16,10 @@ namespace XstReader.App.Controls
                                                  IXstDataSourcedControl<XstMessage>,
                                                  IXstElementSelectable<XstElement>
     {
-
         private XstMessageContentViewControl MessageContentControl { get; } = new XstMessageContentViewControl();
+
+        // Backing event to expose export requests
+        public event EventHandler<XstMessage?>? ExportMessageRequested;
 
         public XstMessageViewControl()
         {
@@ -30,6 +32,7 @@ namespace XstReader.App.Controls
 
             MessageContentControl.DoubleClickItem += (s, e) => AddTab(e?.Element);
             MessageContentControl.SelectedItemChanged += (s, e) => RaiseSelectedItemChanged(e.Element);
+            MessageContentControl.ExportMessageRequested += (s, msg) => ExportMessageRequested?.Invoke(this, msg); // forward base content control
 
             MainKryptonNavigator.CloseAction += (s, e) =>
             {
@@ -47,8 +50,7 @@ namespace XstReader.App.Controls
         private void RaiseSelectedItemChanged(XstElement? element) => SelectedItemChanged?.Invoke(this, new XstElementEventArgs(element));
 
         private XstMessage? _DataSource;
-        public XstMessage? GetDataSource()
-            => _DataSource;
+        public XstMessage? GetDataSource() => _DataSource;
 
         public void SetDataSource(XstMessage? dataSource)
         {
@@ -75,30 +77,21 @@ namespace XstReader.App.Controls
             MessageContentControl.SetDataSource(dataSource);
         }
 
-        public XstElement? GetSelectedItem()
-        {
-            return _DataSource;
-        }
-
-        public void SetSelectedItem(XstElement? item)
-        { }
+        public XstElement? GetSelectedItem() => _DataSource;
+        public void SetSelectedItem(XstElement? item) { }
 
         public void ClearContents()
         {
             MainKryptonNavigator.Pages.Clear();
             MessageContentControl.ClearContents();
-
             GetDataSource()?.ClearContents();
             SetDataSource(null);
         }
 
         private void AddTab(XstElement? element)
         {
-            if (element == null)
-                return;
-            if (element is XstAttachment attach && !attach.CanBeOpenedInApp())
-                return;
-
+            if (element == null) return;
+            if (element is XstAttachment attach && !attach.CanBeOpenedInApp()) return;
 
             var page = MainKryptonNavigator.Pages.FirstOrDefault(p => p.Tag == element);
             if (page == null)
@@ -120,6 +113,7 @@ namespace XstReader.App.Controls
                         viewer.SetDataSource(attachment.AttachedEmailMessage);
                         viewer.SelectedItemChanged += (s, e) => RaiseSelectedItemChanged(e.Element);
                         viewer.DoubleClickItem += (s, e) => AddTab(e.Element);
+                        viewer.ExportMessageRequested += (s, msg) => ExportMessageRequested?.Invoke(this, msg); // forward nested
                     }
                     else
                     {
@@ -134,7 +128,6 @@ namespace XstReader.App.Controls
             MainKryptonNavigator.SelectedPage = page;
         }
 
-        public void Print()
-            => MessageContentControl.Print();
+        public void Print() => MessageContentControl.Print();
     }
 }

@@ -25,7 +25,6 @@ namespace XstReader.App.Helpers
         {
             if (!string.IsNullOrWhiteSpace(path))
                 FolderBrowserDialog.SelectedPath = path;
-
             if (FolderBrowserDialog.ShowDialog() != DialogResult.OK)
                 return false;
             path = FolderBrowserDialog.SelectedPath;
@@ -36,69 +35,103 @@ namespace XstReader.App.Helpers
         {
             if (!string.IsNullOrWhiteSpace(fileName))
                 SaveFileDialog.FileName = fileName;
-
             if (SaveFileDialog.ShowDialog() != DialogResult.OK)
                 return false;
             fileName = SaveFileDialog.FileName;
             return true;
         }
 
-        public static bool ExportMessages<T>(T? elem) where T : XstElement
+        private static string GetFilePrefixFromFile(XstFile file)
+        {
+            try
+            {
+                var type = file.GetType();
+                var prop = type.GetProperty("FileName") ?? type.GetProperty("Path") ?? type.GetProperty("Name");
+                var full = prop?.GetValue(file) as string;
+                if (!string.IsNullOrWhiteSpace(full))
+                {
+                    var name = System.IO.Path.GetFileNameWithoutExtension(full);
+                    return string.IsNullOrWhiteSpace(name) ? string.Empty : name + "_";
+                }
+            }
+            catch { }
+            return string.Empty;
+        }
+
+        private static string GetFilePrefix(XstElement elem, XstFile? owningFile)
+        {
+            if (elem is XstFile file) return GetFilePrefixFromFile(file);
+            if (owningFile != null) return GetFilePrefixFromFile(owningFile);
+            return string.Empty;
+        }
+
+        private static void RunExport(XstElement elem, string basePath, XstFile? owningFile, Action<XstExporter,string> exporterAction)
+        {
+            using (var frm = new WaitingForm($"Exporting from {elem.DisplayName}"))
+            {
+                var prefix = GetFilePrefix(elem, owningFile);
+                var path = basePath;
+                if (!string.IsNullOrEmpty(prefix))
+                {
+                    path = System.IO.Path.Combine(basePath, prefix.TrimEnd('_'));
+                    try { System.IO.Directory.CreateDirectory(path); } catch { }
+                }
+                var exporter = new XstExporter(XstReaderEnvironment.Options.ExportOptions, frm.ReportExportProgress);
+                frm.Start(() => exporterAction(exporter, path));
+                frm.ShowDialog();
+                try { Process.Start(new ProcessStartInfo() { FileName = path, UseShellExecute = true }); } catch { }
+            }
+        }
+
+        // New: explicit message export with owning file prefix
+        public static bool ExportMessage(XstMessage? message, XstFile? owningFile)
+        {
+            if (message == null) return false;
+            string path = "";
+            if (!ConfigureExport() || !AskDirectoryPath(ref path)) return false;
+            RunExport(message, path, owningFile, (ex,p) => ex.SaveMessage(message, p));
+            return true;
+        }
+
+        // UPDATED: now accepts owningFile for folder/message prefixing
+        public static bool ExportMessages<T>(T? elem, XstFile? owningFile = null) where T : XstElement
         {
             string path = "";
-
             if (elem != null && ConfigureExport() && AskDirectoryPath(ref path))
             {
-                using (var frm = new WaitingForm($"Exporting Messages from {elem.DisplayName}"))
-                {
-                    var exporter = new XstExporter(XstReaderEnvironment.Options.ExportOptions, frm.ReportExportProgress);
-                    Action? saveMessagesAct = null;
-                    if (elem is XstFile file)
-                        saveMessagesAct = () => exporter.SaveMessages(file, path);
-                    else if (elem is XstFolder folder)
-                        saveMessagesAct = () => exporter.SaveMessages(folder, path);
-                    else if (elem is XstMessage message)
-                        saveMessagesAct = () => exporter.SaveMessage(message, path);
-
-                    if (saveMessagesAct != null)
-                    {
-                        frm.Start(saveMessagesAct);
-                        frm.ShowDialog();
-                        try { Process.Start(new ProcessStartInfo() { FileName = path, UseShellExecute = true }); }
-                        catch { }
-                    }
-                }
+                if (elem is XstFile file)
+                    RunExport(file, path, file, (ex,p) => ex.SaveMessages(file, p));
+                else if (elem is XstFolder folder)
+                    RunExport(folder, path, owningFile, (ex,p) => ex.SaveMessages(folder, p));
+                else if (elem is XstMessage message)
+                    RunExport(message, path, owningFile, (ex,p) => ex.SaveMessage(message, p));
             }
             return false;
         }
 
-        public static bool ExportAttachments<T>(T? elem) where T : XstElement
+        // UPDATED: now accepts owningFile for folder/message prefixing
+        public static bool ExportAttachments<T>(T? elem, XstFile? owningFile = null) where T : XstElement
         {
             string path = "";
-
             if (elem != null && ConfigureExport() && AskDirectoryPath(ref path))
             {
-                using (var frm = new WaitingForm($"Exporting Messages from {elem.DisplayName}"))
-                {
-                    var exporter = new XstExporter(XstReaderEnvironment.Options.ExportOptions, frm.ReportExportProgress);
-                    Action? saveMessagesAct = null;
-                    if (elem is XstFile file)
-                        saveMessagesAct = () => exporter.SaveAttachments(file, path);
-                    else if (elem is XstFolder folder)
-                        saveMessagesAct = () => exporter.SaveAttachments(folder, path);
-                    else if (elem is XstMessage message)
-                        saveMessagesAct = () => exporter.SaveAttachments(message, path);
-
-                    if (saveMessagesAct != null)
-                    {
-                        frm.Start(saveMessagesAct);
-                        frm.ShowDialog();
-                        try { Process.Start(new ProcessStartInfo() { FileName = path, UseShellExecute = true }); }
-                        catch { }
-                    }
-                }
+                if (elem is XstFile file)
+                    RunExport(file, path, file, (ex,p) => ex.SaveAttachments(file, p));
+                else if (elem is XstFolder folder)
+                    RunExport(folder, path, owningFile, (ex,p) => ex.SaveAttachments(folder, p));
+                else if (elem is XstMessage message)
+                    RunExport(message, path, owningFile, (ex,p) => ex.SaveAttachments(message, p));
             }
             return false;
+        }
+
+        public static bool ExportMessageAttachments(XstMessage? message, XstFile? owningFile)
+        {
+            if (message == null) return false;
+            string path = "";
+            if (!ConfigureExport() || !AskDirectoryPath(ref path)) return false;
+            RunExport(message, path, owningFile, (ex,p) => ex.SaveAttachments(message, p));
+            return true;
         }
     }
 }

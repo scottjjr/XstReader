@@ -21,6 +21,8 @@ namespace XstReader.App.Controls
         private XstRecipientListControl RecipientListControl { get; } = new XstRecipientListControl() { Name = "Recipients List" };
         private XstAttachmentListControl AttachmentListControl { get; } = new XstAttachmentListControl() { Name = "Attachments List" };
 
+        // New event to delegate export to parent (so owning file can be resolved there)
+        public event EventHandler<XstMessage?>? ExportMessageRequested;
 
         public XstMessageContentViewControl()
         {
@@ -40,10 +42,13 @@ namespace XstReader.App.Controls
             AttachmentListControl.DoubleClickItem += (s, e) => RaiseDoubleClickItem(e.Element);
 
             ExportToolStripButton.Enabled = false;
-            ExportToolStripButton.Click += (s, e) => Helpers.ExportHelper.ExportMessages(_DataSource);
+            // Instead of exporting directly, raise event to parent (MainForm) which knows owning file
+            ExportToolStripButton.Click += (s, e) => RaiseExportMessageRequested();
             PrintToolStripButton.Enabled = false;
             PrintToolStripButton.Click += (s, e) => Print();
         }
+
+        private void RaiseExportMessageRequested() => ExportMessageRequested?.Invoke(this, _DataSource);
 
         protected override void OnLoad(EventArgs e)
         {
@@ -81,7 +86,6 @@ namespace XstReader.App.Controls
             AttachmentListControl.SetDataSource(dataSource?.Attachments);
             AttachmentListControl.SetError(dataSource?.HasErrorInAttachments ?? false, dataSource?.ErrorInAttachments ?? "");
 
-            //var htmlText = _DataSource?.GetHtmlVisualization() ?? "";
             var htmlText = _DataSource.RenderAsHtml();
             try
             {

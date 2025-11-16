@@ -57,9 +57,7 @@
     <Compile Update="Controls\XstDataGridView.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Update="Controls\XstFolderTreeControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
+    <Compile Update="Controls\XstFolderTreeControl.cs" />
     <Compile Update="Controls\XstMessageContentViewControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
